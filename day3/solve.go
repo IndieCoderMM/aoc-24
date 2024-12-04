@@ -18,18 +18,14 @@ func Solve(filePath string) int {
 	return ans
 }
 
-var mulFormat []string = []string{"m", "u", "l", "("}
-var dontFormat []string = []string{"d", "o", "n", "'", "t", "(", ")"}
-var doFormat []string = []string{"d", "o", "(", ")"}
-
+// Find sum of all valid mul(x,y)
 func CalMultipleSum(chars []string) int {
+	var mulFormat []string = []string{"m", "u", "l", "("}
 	ans := 0
 	index := 0
 	firstNum := ""
 	secNum := ""
 	curr := "first"
-
-	fmt.Printf("Calculating: %v\n", chars)
 
 	resetVars := func() {
 		index = 0
@@ -87,18 +83,29 @@ func CalMultipleSum(chars []string) int {
 	return ans
 }
 
-func CalByCondition(text string) int {
+// Conditionally decide which part of a string to calculate sum
+func CalByCondition(text string, skipFirst bool) (int, bool) {
 	ans := 0
 	disableKey := "don't()"
 	enableKey := "do()"
+	endsWithDont := false
 
+	// split by don't -> {g1}don't(){g2}
 	groups := strings.Split(text, disableKey)
-	fmt.Printf("[DONT] Splitted: %v\n", len(groups))    // >> [all-dos, (dont),]
-	ans += CalMultipleSum(strings.Split(groups[0], "")) // >> First part all safe
 
-	for j := 1; j < len(groups); j++ {
+	for j := 0; j < len(groups); j++ {
+		if j == 0 && !skipFirst {
+			// Safely calculate the first part if the previous line doesn't end with *dont*
+			ans += CalMultipleSum(strings.Split(groups[0], ""))
+			continue
+		}
+
 		enabledParts := strings.Split(groups[j], enableKey)
-		fmt.Printf("[DO] Splitted: %v\n", len(enabledParts))
+
+		// Whether the line endsWithDont; use for the next line
+		if j == len(groups)-1 && len(enabledParts) == 1 {
+			endsWithDont = true
+		}
 
 		// Skip the first part
 		for k := 1; k < len(enabledParts); k++ {
@@ -106,11 +113,12 @@ func CalByCondition(text string) int {
 		}
 	}
 
-	return ans
+	return ans, endsWithDont
 }
 
 func readFile(filePath string) (int, error) {
 	ans := 0
+	skipFirst := false
 
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -122,7 +130,10 @@ func readFile(filePath string) (int, error) {
 	for scanner.Scan() {
 		text := scanner.Text()
 
-		ans += CalByCondition(text)
+		sum, endsWithDont := CalByCondition(text, skipFirst)
+		ans += sum
+		skipFirst = endsWithDont
+		fmt.Printf("Skipping next: %v\n", skipFirst)
 	}
 	if err := scanner.Err(); err != nil {
 		return 0, fmt.Errorf("Error reading file: %v", err)

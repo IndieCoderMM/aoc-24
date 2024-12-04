@@ -14,7 +14,7 @@ func TestCalByCondition(t *testing.T) {
 
 	for i, tc := range testCases {
 		t.Run(fmt.Sprintf("Case %d", i), func(t *testing.T) {
-			ans := CalByCondition(tc)
+			ans, _ := CalByCondition(tc, false)
 			n, err := strconv.Atoi(strResults[i])
 			if err != nil {
 				panic("Failed to convert result to int")
@@ -44,14 +44,14 @@ func TestCalByCondition(t *testing.T) {
 // 	}
 // }
 
-// func TestSolve(t *testing.T) {
-// 	file := utils.GetFilePath(2)
-// 	expected := utils.GetAnswer(2)
-//
-// 	t.Run("Day-2 Solution", func(t *testing.T) {
-// 		ans := Solve(file)
-// 		if ans != expected {
-// 			t.Errorf("Expected %d, got %d", expected, ans)
-// 		}
-// 	})
-// }
+func TestSolve(t *testing.T) {
+	file := utils.GetFilePath(3)
+	expected := utils.GetAnswer(3)
+
+	t.Run("Day-3 Solution", func(t *testing.T) {
+		ans := Solve(file)
+		if ans != expected {
+			t.Errorf("Expected %d, got %d", expected, ans)
+		}
+	})
+}
