@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
-func Solve() int {
-	lines, err := readFile("data/day-4.txt")
+func Solve(filePath string) int {
+	lines, err := readFile(filePath)
 	if err != nil {
 		panic(err)
 	}
