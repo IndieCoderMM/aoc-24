@@ -9,3 +9,7 @@ func main() {
 
 	fmt.Printf("Distinct positions: %d\n", ans)
 }
+
+// part1 -> 5564
+// too low -> 1934
+// 1976
