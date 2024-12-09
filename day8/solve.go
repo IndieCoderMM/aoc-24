@@ -8,14 +8,13 @@ import (
 	"strings"
 )
 
-func Solve(filePath string) int {
+func Solve(filePath string) (int, [][]string, []Pos) {
 	ans := 0
 	grid := readFile(filePath)
 	atnMap := getAntennaMap(grid)
 
 	antinodes := make(map[Pos]bool)
-	for k, v := range atnMap {
-		fmt.Printf("Antenna freq: %s...\n", k)
+	for _, v := range atnMap {
 		for i := 0; i < len(v)-1; i++ {
 			for j := i + 1; j < len(v); j++ {
 				nodes := getAntinodePos(grid, v[i], v[j])
@@ -35,9 +34,9 @@ func Solve(filePath string) int {
 
 	ans = len(markers)
 
-	drawMap(grid, markers...)
+	// drawMap(grid, markers...)
 
-	return ans
+	return ans, grid, markers
 }
 
 type Pos = struct {
@@ -74,14 +73,13 @@ func placeAntinodes(start Pos, dir Pos, maxRow int, maxCol int) []Pos {
 	pos := Pos{start.x, start.y}
 
 	for {
-		pos.x += dir.x
-		pos.y += dir.y
-
 		if pos.x < 0 || pos.x > maxCol || pos.y < 0 || pos.y > maxRow {
 			break
 		}
 		antinodes = append(antinodes, pos)
-		break
+
+		pos.x += dir.x
+		pos.y += dir.y
 	}
 
 	return antinodes
