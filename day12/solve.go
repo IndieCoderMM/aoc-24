@@ -9,9 +9,11 @@ import (
 
 func Solve(filePath string) int {
 	grid := readFile(filePath)
+	visited := initVisited(grid)
+	ans := 0
+	calculate(grid, visited, false, &ans)
 
-	// drawGrid(grid)
-	ans := calculate(grid)
+	// Run(grid, visited, func() (int, bool) { return calculate(grid, visited, false, &ans) })
 
 	return ans
 }
@@ -23,9 +25,9 @@ type Cell = struct {
 
 var directions = [4]Cell{{1, 0}, {0, 1}, {-1, 0}, {0, -1}}
 
-func calculate(grid [][]string) int {
-	visited := initVisited(grid)
-	ans := 0
+func calculate(grid [][]string, visited [][]bool, step bool, ans *int) (int, bool) {
+	completed := false
+	processed := false
 
 	for r, row := range grid {
 		for c, p := range row {
@@ -36,18 +38,23 @@ func calculate(grid [][]string) int {
 			stack := []Cell{{r, c}}
 			visited[r][c] = true
 			currArea := 1
-			currPerimeter := 0
+			currSides := 0
+			regions := make(map[Cell][4]bool)
+
+			// Getting area
 			for len(stack) > 0 {
 				cell := stack[len(stack)-1]
 				stack = stack[:len(stack)-1]
-				perimeter := 0
 
+				regions[cell] = [4]bool{}
 				for _, dir := range directions {
 					newRow, newCol := cell.row+dir.row, cell.col+dir.col
+
 					if !isSamePlant(grid, newRow, newCol, p) {
-						perimeter++ // increase the perimeter if touching the outside or different plant
+						// Part1: perimeter++ // increase the perimeter if touching the outside or different plant
 						continue
 					}
+
 					if visited[newRow][newCol] {
 						continue
 					}
@@ -56,17 +63,70 @@ func calculate(grid [][]string) int {
 					stack = append(stack, Cell{newRow, newCol})
 					currArea++
 				}
-
-				currPerimeter += perimeter
 			}
 
-			// fmt.Printf("Total Area %d, Perimeter (%d)\n", currArea, currPerimeter)
-			ans += currArea * currPerimeter
+			// For cell in each region set index to true if it touching outside
+			// direction -> top, right, bottom, left
+			for cell, neighbors := range regions {
+				for i, dir := range directions {
+					newRow, newCol := cell.row+dir.row, cell.col+dir.col
+					if !isSamePlant(grid, newRow, newCol, p) {
+						neighbors[i] = true
+						regions[cell] = neighbors
+					}
+				}
+			}
+
+			// fmt.Printf("Current region %d, %v\n", len(regions), regions)
+			// Count sides +1 if cell[dir] is true and above cell[dir] is false
+			for cell, neighbors := range regions {
+				// fmt.Printf("Current cell %v, [%v]\n", cell, neighbors)
+				for i := range directions {
+					// fmt.Printf("checking direction %s @i%d\n", dir.dir, i)
+					if neighbors[i] && !regions[Cell{cell.row, cell.col - 1}][i] && !regions[Cell{cell.row - 1, cell.col}][i] {
+						currSides++
+					}
+				}
+			}
+
+			// drawEdges(grid, allEdges)
+			// fmt.Printf("[%s]: Area %d, Sides (%d)\n", p, currArea, currSides)
+
+			// Update ans
+			*ans += currArea * currSides
+
+			if step {
+				// Only increment once
+				processed = true
+				break
+			}
+		}
+		if step && processed {
+			// Only increment once
+			break
 		}
 	}
 
-	return ans
+	// Check if all cells are visited
+	completed = true
+	for r := range visited {
+		for _, v := range visited[r] {
+			if !v {
+				completed = false
+				break
+			}
+		}
+	}
+
+	return *ans, completed
 }
+
+//
+// Draw cell at x,y with the given plant, edges
+// +-+-+-+
+// |p|p|p|
+// +-+-+-+
+// each cell is 3x3 grid
 
 func drawGrid[T any](grid [][]T) {
 	for r := range grid {

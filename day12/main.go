@@ -8,3 +8,5 @@ func main() {
 
 	fmt.Printf("Total fence price: %d\n", ans)
 }
+
+// 808796
